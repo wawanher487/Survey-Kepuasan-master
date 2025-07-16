@@ -75,55 +75,46 @@ if (!function_exists('getIKM')) {
       $bobotNilaiTertimbang = 1 / count($kuesioners);
     }
 
-    $nilaiPersepsiPerUnit = [];
-    foreach ($respondens as $keyResponden => $responden) {
-      foreach ($responden->answers as $keyAnswer => $answer) {
-        $nilaiPersepsiPerUnit[$keyResponden][$keyAnswer] = (object) [
-          'question' => $answer->kuesioner->question,
-          'answer' => $answer->answer
-        ];
-      }
-    }
+    // Hitung total nilai dan jumlah responden per kuesioner_id
+    $totalNilai = [];
+    $jumlahRespondenPerKuesioner = [];
 
-    $totalAnswer = [];
-    foreach ($nilaiPersepsiPerUnit as $key => $array) {
-      for ($i = 0; $i < count($array); $i++) {
-        if (!isset($totalAnswer[$i])) {
-          $totalAnswer[$i] = 0;
+    foreach ($respondens as $responden) {
+      foreach ($responden->answers as $answer) {
+        $kuesionerId = $answer->kuesioner_id;
+
+        // Tambah nilai
+        if (!isset($totalNilai[$kuesionerId])) {
+          $totalNilai[$kuesionerId] = 0;
         }
-        $totalAnswer[$i] += $array[$i]->answer;
+        $totalNilai[$kuesionerId] += $answer->answer;
+
+        // Tambah jumlah responden untuk kuesioner tersebut
+        if (!isset($jumlahRespondenPerKuesioner[$kuesionerId])) {
+          $jumlahRespondenPerKuesioner[$kuesionerId] = 0;
+        }
+        $jumlahRespondenPerKuesioner[$kuesionerId]++;
       }
     }
 
-    foreach ($totalAnswer as $key => $value) {
-      $data[$key] = (object) [
-        'question' => $kuesioners[$key]->question,
-        'totalNilaiPersepsiPerUnit' => $value
+    foreach ($totalNilai as $kuesionerId => $total) {
+      $kuesioner = $kuesioners->firstWhere('id', $kuesionerId);
+      $jumlahResponden = $jumlahRespondenPerKuesioner[$kuesionerId] ?? 1;
+
+      $NRR = $total / $jumlahResponden;
+      $NRRTertimbang = $NRR * $bobotNilaiTertimbang;
+
+      $data[$kuesionerId] = (object) [
+        'question' => $kuesioner ? $kuesioner->question : 'Tidak ditemukan',
+        'jumlahResponden' => $jumlahResponden,
+        'totalNilaiPersepsiPerUnit' => $total,
+        'NRRPerUnsur' => $NRR,
+        'NRRTertimbangUnsur' => $NRRTertimbang
       ];
     }
 
-    foreach ($data as $key => $value) {
-      $data[$key] = (object) [
-        'question' => $value->question,
-        'totalNilaiPersepsiPerUnit' => $value->totalNilaiPersepsiPerUnit,
-        'NRRPerUnsur' => $value->totalNilaiPersepsiPerUnit / count($respondens)
-      ];
-    }
-
-    foreach ($data as $key => $value) {
-      $data[$key] = (object) [
-        'question' => $value->question,
-        'totalNilaiPersepsiPerUnit' => $value->totalNilaiPersepsiPerUnit,
-        'NRRPerUnsur' => $value->NRRPerUnsur,
-        'NRRTertimbangUnsur' => $value->NRRPerUnsur * $bobotNilaiTertimbang
-      ];
-    }
-
-    $IKM = 0;
-    foreach ($data as $value) {
-      $IKM += $value->NRRTertimbangUnsur;
-    }
-
+    // Total IKM
+    $IKM = array_sum(array_map(fn($item) => $item->NRRTertimbangUnsur, $data));
     $konversiIKM = $IKM * 25;
 
     return [
@@ -134,3 +125,5 @@ if (!function_exists('getIKM')) {
     ];
   }
 }
+
+

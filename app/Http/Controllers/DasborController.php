@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+
 function getIkmData($respondens, $kuesioners)
 {
     $data = [];
@@ -271,7 +272,7 @@ class DasborController extends Controller
             'total' => $dataRespondens->count(),
             'colors' => [$colors->red, $colors->orange, $colors->yellow, $colors->green, $colors->blue, $colors->purple, $colors->pink, $colors->brown, $colors->gray, $colors->teal, $colors->cyan, $colors->indigo, $colors->lime, $colors->amber]
         ];
-        
+
         $dataGrafikDomisili = (object) [
             'series' => [
                 (int) number_format(getPercentage($dataRespondens->where('domicile', 'Garut')->count(), $dataRespondens->count()), 2),
@@ -287,8 +288,9 @@ class DasborController extends Controller
 
     public function ikm(Request $request)
     {
-        $query = Responden::query();
+        $query = Responden::with(['answers.kuesioner', 'village']);
 
+        // Cek dan isi tanggal jika belum diisi
         if (!$request->has('start_date') || !$request->has('end_date')) {
             $oldestResponden = Responden::oldest('created_at')->first();
             $newestResponden = Responden::latest('created_at')->first();
@@ -301,23 +303,64 @@ class DasborController extends Controller
             return redirect()->route('ikm.index', array_merge($request->all(), $dates));
         }
 
-        if ($request->has('filter') && $request->has('filter_by') && $request->filter != 'Semua') {
-            $query->where($request->filter_by, $request->filter);
+        // Filter berdasarkan satuan kerja (hanya jika bukan 'Semua')
+        if (
+            $request->has('filter') &&
+            $request->has('filter_by') &&
+            strtolower($request->filter) !== 'semua'
+        ) {
+            if ($request->filter_by === 'village') {
+                $query->whereHas('village', function ($q) use ($request) {
+                    $q->where('village', $request->filter);
+                });
+            } elseif ($request->filter_by === 'village_id') {
+                $query->where('village_id', $request->filter);
+            }
         }
 
-        $startDate = Carbon::parse($request->start_date)->subDay()->startOfDay()->toDateTimeString();
-        $endDate = Carbon::parse($request->end_date)->addDay()->endOfDay()->toDateTimeString();
-
+        // Filter berdasarkan tanggal
+        $startDate = Carbon::parse($request->start_date)->startOfDay();
+        $endDate = Carbon::parse($request->end_date)->endOfDay();
         $query->whereBetween('created_at', [$startDate, $endDate]);
 
+        // Ambil semua responden yang sesuai filter
         $respondens = $query->get();
-        $kuesioners = Kuesioner::all();
+
+        // Ambil hanya kuesioner yang pernah dijawab oleh responden
+        $answeredKuesionerIds = $respondens->flatMap(function ($responden) {
+            return $responden->answers->pluck('kuesioner_id');
+        })->unique()->values();
+
+        $kuesioners = Kuesioner::whereIn('id', $answeredKuesionerIds)->get();
         $villages = Village::all();
 
+        // Debugging log
+        logger()->info('Jumlah Responden: ' . $respondens->count());
+        foreach ($respondens as $responden) {
+            logger()->info("Responden ID: {$responden->id}");
+            foreach ($responden->answers as $answer) {
+                logger()->info(" - Answer: kuesioner_id={$answer->kuesioner_id}, nilai={$answer->answer}");
+            }
+        }
+
+        // Hitung IKM
         extract(getIKM($respondens, $kuesioners));
 
-        return view('pages.dashboard.ikm.index', compact('data', 'IKM', 'konversiIKM', 'bobotNilaiTertimbang', 'villages'));
+        // Log hasil IKM
+        logger()->info('Jumlah data IKM: ' . count($data));
+        foreach ($data as $d) {
+            logger()->info(" - {$d->question}: NRR = {$d->NRRPerUnsur}, Tertimbang = {$d->NRRTertimbangUnsur}");
+        }
+
+        return view('pages.dashboard.ikm.index', compact(
+            'data',
+            'IKM',
+            'konversiIKM',
+            'bobotNilaiTertimbang',
+            'villages'
+        ));
     }
+
 
     public function ikm_export(Request $request)
     {

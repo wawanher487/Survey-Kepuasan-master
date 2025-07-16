@@ -87,10 +87,6 @@
                         </div>
                     </div>
 
-
-                    <input type="hidden" name="filter" value="{{ request('filter') }}">
-                    <input type="hidden" name="filter_by" value="{{ request('filter_by') }}">
-
                     <!-- Dropdown Satuan Kerja -->
                     <div class="relative">
                         <label for="filter"
@@ -150,6 +146,9 @@
                             Jumlah Nilai/Unsur
                         </th>
                         <th scope="col" class="px-6 py-3">
+                            Jumlah Responden
+                        </th>
+                        <th scope="col" class="px-6 py-3">
                             NRR/Unsur
                         </th>
                         <th scope="col" class="px-6 py-3">
@@ -176,6 +175,9 @@
                                     {{ number_format($item->totalNilaiPersepsiPerUnit, 2) }}
                                 </td>
                                 <td scope="row" class="px-6 py-4 text-gray-900 dark:text-white">
+                                    {{ $item->jumlahResponden }}
+                                </td>
+                                <td scope="row" class="px-6 py-4 text-gray-900 dark:text-white">
                                     {{ number_format($item->NRRPerUnsur, 2) }}
                                 </td>
                                 <td scope="row" class="px-6 py-4 text-gray-900 dark:text-white">
@@ -187,7 +189,7 @@
                             </tr>
                         @endforeach
                         <tr class="border-b bg-gray-50 font-bold">
-                            <td scope="row" colspan="4" class="border-r px-6 py-4 text-gray-900 dark:text-white">
+                            <td scope="row" colspan="5" class="border-r px-6 py-4 text-gray-900 dark:text-white">
                                 IKM
                             </td>
                             <td scope="row" class="px-6 py-4 text-gray-900 dark:text-white">
@@ -195,7 +197,7 @@
                             </td>
                         </tr>
                         <tr class="border-b bg-gray-50 font-bold">
-                            <td scope="row" colspan="4" class="border-r px-6 py-4 text-gray-900 dark:text-white">
+                            <td scope="row" colspan="5" class="border-r px-6 py-4 text-gray-900 dark:text-white">
                                 Konversi IKM
                             </td>
                             <td scope="row" class="px-6 py-4 text-gray-900 dark:text-white">
@@ -203,7 +205,7 @@
                             </td>
                         </tr>
                         <tr class="border-b bg-gray-50 font-bold">
-                            <td scope="row" colspan="4" class="border-r px-6 py-4 text-gray-900 dark:text-white">
+                            <td scope="row" colspan="5" class="border-r px-6 py-4 text-gray-900 dark:text-white">
                                 Mutu Pelayanan (Hasil Penilaian)
                             </td>
                             <td scope="row" class="px-6 py-4 text-gray-900 dark:text-white">
@@ -211,7 +213,7 @@
                             </td>
                         </tr>
                         <tr class="border-b bg-gray-50 font-bold">
-                            <td scope="row" colspan="4" class="border-r px-6 py-4 text-gray-900 dark:text-white">
+                            <td scope="row" colspan="5" class="border-r px-6 py-4 text-gray-900 dark:text-white">
                                 Kinerja Unit Pelayanan
                             </td>
                             <td scope="row" class="px-6 py-4 text-gray-900 dark:text-white">
