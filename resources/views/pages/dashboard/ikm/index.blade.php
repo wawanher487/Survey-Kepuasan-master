@@ -76,7 +76,7 @@
 			</div>
 			<dl class="mb-5 grid grid-cols-3 divide-x divide-gray-200 text-sm text-gray-900 dark:divide-gray-700 dark:text-white">
 				<div class="flex flex-col">
-					<dt class="mb-1 text-gray-500 dark:text-gray-400">Desa</dt>
+					<dt class="mb-1 text-gray-500 dark:text-gray-400">Satuan Kerja</dt>
 					<dd class="font-semibold">{{ request('filter') ?? 'Semua' }}</dd>
 				</div>
 				<div class="flex flex-col pl-5">

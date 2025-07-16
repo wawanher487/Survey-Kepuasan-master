@@ -161,7 +161,7 @@
 							Pekerjaan
 						</th>
 						<th scope="col" class="px-6 py-3">
-							Desa
+							Satuan kerja
 						<emp>
 						<th scope="col" class="px-6 py-3">
 							Tempat Tinggal

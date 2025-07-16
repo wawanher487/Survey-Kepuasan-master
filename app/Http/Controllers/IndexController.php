@@ -93,20 +93,13 @@ class IndexController extends Controller
             $question = $request->get('question');
 
             if (!$step) {
-                return redirect()
-                    ->route('kuesioner', ['step' => 1]);
-            }
-
-            $kuesioner = Kuesioner::all();
-            $totalKuesioner = count($kuesioner);
-
-            if(count($kuesioner) === 0) {
-                throw new \Error('Maaf, kuesioner belum tersedia');
+                return redirect()->route('kuesioner', ['step' => 1]);
             }
 
             if ($step == 1) {
                 $villages = Village::all();
-                return view('pages.public.kuesioner', compact('step', 'totalKuesioner', 'villages'));
+                return view('pages.public.kuesioner', compact('step', 'villages'))
+                    ->with('totalKuesioner', 0); // belum tau total
             }
 
             if ($step == 2) {
@@ -127,44 +120,68 @@ class IndexController extends Controller
                     return redirect()->back()->withInput()->withErrors($validator);
                 }
 
+                // Ambil kuesioner sesuai satuan kerja
+                $kuesioners = Kuesioner::where('village_id', $data['village'])->get();
+                $totalKuesioner = count($kuesioners);
+
+                if ($totalKuesioner === 0) {
+                    throw new \Error('Maaf, kuesioner belum tersedia');
+                }
+
+                // Cek apakah semua sudah diisi
                 $semuaPertanyaanTerisi = true;
                 for ($i = 1; $i <= $totalKuesioner; $i++) {
                     $questionKey = "question" . $i;
                     if (!isset($data[$questionKey]) || empty($data[$questionKey])) {
-                        if($question == count($kuesioner)+1) {
+                        if ($question == $totalKuesioner + 1) {
                             throw new \Error('Isi semua kuesioner!');
-                        };
+                        }
                         $semuaPertanyaanTerisi = false;
                         break;
                     }
                 }
 
+                // Jika semua sudah diisi, lanjut step 3
                 if ($semuaPertanyaanTerisi) {
                     $data['step'] = 3;
-                    $step = $data['step'];
-                    return redirect()
-                        ->route('kuesioner', compact('kuesioner', 'data', 'step'));
+                    return redirect()->route('kuesioner', [
+                        'step' => 3,
+                        'data' => $data
+                    ]);
                 }
 
-                $kuesioner = $kuesioner[$question - 1];
-
+                // tampilkan pertanyaan ke-$question
+                $kuesioner = $kuesioners[$question - 1];
                 $data['question'] = $question - 1;
                 $previous = $question == 1 ? '#' : route('kuesioner', $data);
                 $data['question'] = $question + 1;
                 $next = $question == $totalKuesioner ? '#' : route('kuesioner', $data);
 
-                return view('pages.public.kuesioner', compact('kuesioner', 'totalKuesioner', 'step', 'next', 'previous', 'question', 'data'));
+                return view('pages.public.kuesioner', compact(
+                    'kuesioner',
+                    'step',
+                    'next',
+                    'previous',
+                    'question',
+                    'totalKuesioner',
+                    'data'
+                ));
             }
 
             if ($step == 3) {
                 $data = $request->data;
                 $step = $request->step;
 
-                return view('pages.public.kuesioner', compact('kuesioner', 'data', 'step'));
+                $kuesioners = Kuesioner::where('village_id', $data['village'])->get();
+
+                return view('pages.public.kuesioner', [
+                    'step' => 3,
+                    'kuesioner' => $kuesioners,
+                    'data' => $data
+                ]);
             }
 
-            return redirect()
-                ->route('kuesioner', ['step' => 1]);
+            return redirect()->route('kuesioner', ['step' => 1]);
         } catch (\Throwable $th) {
             return redirect()
                 ->back()
@@ -186,7 +203,7 @@ class IndexController extends Controller
                 'domicile' => $request->domicile,
             ]);
 
-            if($request->feedback) {
+            if ($request->feedback) {
                 Feedback::create([
                     'responden_id' => (int) $responden->id,
                     'feedback' => $request->feedback
