@@ -388,7 +388,12 @@ class DasborController extends Controller
         $query->whereBetween('created_at', [$startDate, $endDate]);
 
         $respondens = $query->get();
-        $kuesioners = Kuesioner::all();
+        $answeredKuesionerIds = $respondens->flatMap(function ($responden) {
+            return $responden->answers->pluck('kuesioner_id');
+        })->unique()->values();
+
+        $kuesioners = Kuesioner::whereIn('id', $answeredKuesionerIds)->get();
+
 
         $ikm = getIkmData($respondens, $kuesioners);
         $data = getIkm($respondens, $kuesioners);
@@ -447,7 +452,12 @@ class DasborController extends Controller
         $query->whereBetween('created_at', [$startDate, $endDate]);
 
         $respondens = $query->get();
-        $kuesioners = Kuesioner::all();
+        $answeredKuesionerIds = $respondens->flatMap(function ($responden) {
+            return $responden->answers->pluck('kuesioner_id');
+        })->unique()->values();
+
+        $kuesioners = Kuesioner::whereIn('id', $answeredKuesionerIds)->get();
+
 
         $ikm = getIkmData($respondens, $kuesioners);
         $data = getIkm($respondens, $kuesioners);
@@ -506,7 +516,12 @@ class DasborController extends Controller
         $query->whereBetween('created_at', [$startDate, $endDate]);
 
         $respondens = $query->get();
-        $kuesioners = Kuesioner::all();
+        $answeredKuesionerIds = $respondens->flatMap(function ($responden) {
+            return $responden->answers->pluck('kuesioner_id');
+        })->unique()->values();
+
+        $kuesioners = Kuesioner::whereIn('id', $answeredKuesionerIds)->get();
+
         $villages = Village::all();
 
         extract(getIKM($respondens, $kuesioners));
@@ -547,7 +562,12 @@ class DasborController extends Controller
         $query->whereBetween('created_at', [$startDate, $endDate]);
 
         $respondens = $query->get();
-        $kuesioners = Kuesioner::all();
+        $answeredKuesionerIds = $respondens->flatMap(function ($responden) {
+            return $responden->answers->pluck('kuesioner_id');
+        })->unique()->values();
+
+        $kuesioners = Kuesioner::whereIn('id', $answeredKuesionerIds)->get();
+
 
         extract(getIKM($respondens, $kuesioners));
 
