@@ -23,13 +23,13 @@ class VerifikasiController extends Controller
             'email' => 'required|email',
         ]);
 
-        // Generate token 6 karakter angka (agar mudah diketik)
-        $token = random_int(100000, 999999);
+        $token = strtoupper(Str::random(6));
 
         // Simpan ke session
         session([
             'email_verifikasi' => $request->email,
             'token_verifikasi' => $token,
+            'token_expired_at' => now()->addMinutes(1),
         ]);
 
         // Kirim email
@@ -50,14 +50,25 @@ class VerifikasiController extends Controller
 
         $kodeInput = $request->input('kode_akses');
         $kodeBenar = session('token_verifikasi');
+        $expiredAt = session('token_expired_at');
 
-        if ($kodeInput == $kodeBenar) {
-            // Tandai berhasil
-            session()->put('sudah_verifikasi', true);
-            return redirect()->route('kuesioner');
+        if (!$kodeBenar || !$expiredAt) {
+            return back()->with('error', 'Kode verifikasi tidak ditemukan. Silakan kirim ulang.');
         }
 
-        return redirect()->back()->with('error', 'Kode yang Anda masukkan salah.');
+        if (now()->gt($expiredAt)) {
+            return back()->with('error', 'Kode verifikasi sudah kedaluwarsa. Silakan kirim ulang.');
+        }
+
+        // Cek apakah kodenya cocok
+        if ($kodeInput !== $kodeBenar) {
+            return back()->with('error', 'Kode yang Anda masukkan salah.');
+        }
+
+        // Jika cocok dan belum expired, tandai verifikasi berhasil
+        $request->session()->put('sudah_verifikasi', true);
+
+        return redirect()->route('kuesioner');
     }
 
 
