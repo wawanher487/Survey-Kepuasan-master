@@ -11,14 +11,17 @@ use App\Http\Controllers\RespondenController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VerifikasiController;
 
-// halaman form verifikasi
 Route::get('/verifikasi', [VerifikasiController::class, 'index'])->name('verifikasi.form');
-// proses verifikasi
-Route::post('/verifikasi', [VerifikasiController::class, 'verifikasi'])->name('verifikasi.proses');
-// rute kuesioner, pakai middleware 'verifikasi'
+Route::post('/verifikasi/kirim', [VerifikasiController::class, 'verifikasi'])->name('verifikasi.kirim');
+Route::post('/verifikasi/proses', [VerifikasiController::class, 'proses'])->name('verifikasi.proses');
+
+
+// Hanya ini yang pakai middleware
 Route::middleware(['verifikasi'])->group(function () {
-   Route::get('/kuesioner', [IndexController::class, 'kuesioner'])->name('kuesioner');
+    Route::get('/kuesioner', [IndexController::class, 'kuesioner'])->name('kuesioner');
 });
+
+
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
 Route::post('/result/store', [IndexController::class, 'store'])->name('result.store');

@@ -15,6 +15,7 @@ class KuesionerController extends Controller
 
     public function index(Request $request)
     {
+        dd($request->session()->all());
         $villages = Village::all();
 
         // Query awal

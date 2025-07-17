@@ -15,11 +15,15 @@ class VerifikasiSession
      */
     public function handle(Request $request, Closure $next)
     {
-        if (!$request->session()->get('sudah_verifikasi')) {
-            return redirect('/verifikasi')->with('error', 'Silakan verifikasi terlebih dahulu.');
+        if (
+            !$request->session()->get('sudah_verifikasi') &&
+            !$request->is('verifikasi') &&
+            !$request->is('verifikasi-kirim') &&
+            !$request->is('verifikasi/proses')
+        ) {
+            return redirect('/verifikasi');
         }
 
         return $next($request);
     }
-
 }
