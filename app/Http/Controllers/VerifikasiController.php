@@ -67,7 +67,7 @@ class VerifikasiController extends Controller
 
         // Jika cocok dan belum expired, tandai verifikasi berhasil
         $request->session()->put('sudah_verifikasi', true);
-
+        // $request->session()->forget(['token_verifikasi', 'token_expired_at', 'email_verifikasi']);
         return redirect()->route('kuesioner');
     }
 

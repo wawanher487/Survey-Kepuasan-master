@@ -15,7 +15,6 @@ class KuesionerController extends Controller
 
     public function index(Request $request)
     {
-        dd($request->session()->all());
         $villages = Village::all();
 
         // Query awal
@@ -32,7 +31,9 @@ class KuesionerController extends Controller
     }
     public function create()
     {
-
+        if (!session('sudah_verifikasi')) {
+            return redirect()->route('verifikasi.form')->with('error', 'Silakan verifikasi email terlebih dahulu.');
+        }
 
         $unsurs = Unsur::all();
         $villages = Village::all();
@@ -44,6 +45,10 @@ class KuesionerController extends Controller
 
         try {
             Kuesioner::create($request->only('question', 'unsur_id', 'village_id'));
+
+            // Hapus session verifikasi agar tidak bisa isi lagi
+            $request->session()->forget(['sudah_verifikasi', 'token_verifikasi', 'token_expired_at', 'email_verifikasi']);
+
             return redirect()
                 ->route('kuesioner.index')
                 ->with('success', 'Data berhasil disimpan!');

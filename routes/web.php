@@ -15,13 +15,10 @@ Route::get('/verifikasi', [VerifikasiController::class, 'index'])->name('verifik
 Route::post('/verifikasi/kirim', [VerifikasiController::class, 'verifikasi'])->name('verifikasi.kirim');
 Route::post('/verifikasi/proses', [VerifikasiController::class, 'proses'])->name('verifikasi.proses');
 
-
 // Hanya ini yang pakai middleware
 Route::middleware(['verifikasi'])->group(function () {
     Route::get('/kuesioner', [IndexController::class, 'kuesioner'])->name('kuesioner');
 });
-
-
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
 Route::post('/result/store', [IndexController::class, 'store'])->name('result.store');
