@@ -9,11 +9,20 @@ use App\Http\Controllers\KuesionerController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RespondenController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VerifikasiController;
+
+// halaman form verifikasi
+Route::get('/verifikasi', [VerifikasiController::class, 'index'])->name('verifikasi.form');
+// proses verifikasi
+Route::post('/verifikasi', [VerifikasiController::class, 'verifikasi'])->name('verifikasi.proses');
+// rute kuesioner, pakai middleware 'verifikasi'
+Route::middleware(['verifikasi'])->group(function () {
+   Route::get('/kuesioner', [IndexController::class, 'kuesioner'])->name('kuesioner');
+});
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
-Route::get('/kuesioner', [IndexController::class, 'kuesioner'])->name('kuesioner');
 Route::post('/result/store', [IndexController::class, 'store'])->name('result.store');
-Route::post('/auth/login', [AuthController::class, 'login'])->name('auth.login'); 
+Route::post('/auth/login', [AuthController::class, 'login'])->name('auth.login');
 Route::get('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
 Route::middleware(['web', 'auth'])->prefix('dasbor')->group(function () {
